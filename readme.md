@@ -54,7 +54,7 @@ makepkg -sic
 - Search for a package; and then install it (`yeet <package search terms>`)
 - Install a package (`yeet -S <package-name>`)
 - Remove a package (`yeet -R <package-name>`)
-- Upgrade all packages (`yeet` OR `yeet -U`)
+- Upgrade all packages (`yeet -U`)
 - Run pacman -Q (`yeet -Q`)
 
 `yeet` can be configured using its config file, located at `$XDG_CONFIG_HOME/yeet/yeet.conf` OR `$HOME/.config/yeet/yeet.conf`. [Here](./yeet.example.conf) is an example configuration.
