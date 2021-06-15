@@ -51,8 +51,8 @@ function join_by {
 }
 # Check if we are root, else use sudo
 function require_root {
-	if [[ "$(id -u)" != "0" ]]; then
-		if [[ -f "$(command -v $SUDO_BIN)" ]]; then
+	if [ "$(id -u)" != "0" ]; then
+		if [ -f "$(command -v $SUDO_BIN)" ]; then
 			$SUDO_BIN $*
 		else
 			printr "ERR Command $SUDO_BIN not found, cannot run command \`$*\` without root; aborting..."
@@ -81,7 +81,7 @@ CONFIG_FILE_PATH="${XDG_CONFIG_HOME:-$HOME/.config}/yeet/yeet.conf"
 # Make sure the yeet dir exists
 mkdir -p "${XDG_CONFIG_HOME:-$HOME/.config}/yeet/"
 # Now check if the user already has a config file in that dir
-if [[ -f "$CONFIG_FILE_PATH" ]]; then
+if [ -f "$CONFIG_FILE_PATH" ]; then
 	# If the file exists, set all the variables from it
 	source "$CONFIG_FILE_PATH"
 else
@@ -113,7 +113,7 @@ else
 	echo "PRINT_LOGO=true" >> "$CONFIG_FILE_PATH"
 
 	# If there is no config yet and the operation is not 'help', definitely print the logo
-	if [[ "$1" != "-h" ]] && ! [ -z "$1" ]; then
+	if [ "$1" != "-h" ] && ! [ -z "$1" ]; then
 		print_logo
 	fi
 	# Then turn it off, we don't want to print again
@@ -135,9 +135,9 @@ fi
 
 ## UI
 # Print out the logo, unless specified otherwise in the config (generated using command `figlet -f pagga YEET`)
-if [[ "$PRINT_LOGO" == "true" ]]; then
+if [ "$PRINT_LOGO" == "true" ]; then
 	# Make sure the operation is not 'help', else we will be printing the logo twice
-	if [[ "$1" != "-h" ]] && ! [ -z "$1" ]; then
+	if [ "$1" != "-h" ] && ! [ -z "$1" ]; then
 		print_logo
 	fi
 fi
@@ -166,12 +166,17 @@ elif [ "$1" == "-S" ]; then
 	operation="install"
 	# Shift the params so the second one is the first, the third is the second and so on
 	shift
+elif [ "$1" == "-Syy" ]; then
+	# Install package(s)
+	operation="updateinstall"
+	# Shift the params so the second one is the first, the third is the second and so on
+	shift
 elif [ "$1" == "-R" ]; then
 	# Remove package(s)
 	operation="remove"
 	# Shift the params so the second one is the first, the third is the second and so on
 	shift
-elif [[ "$1" == "-Q" ]] || [[ "$1" == "-Q"* ]]; then
+elif [ "$1" == "-Q" ] || [ "$1" == "-Q"* ]; then
 	# If the first option is -Q and the like (e.g., -Ql), then let pacman handle it
 	operation="pacman"
 else
@@ -260,7 +265,7 @@ function install_packages {
 		printg "==> Installing $(package-query --rsort=p -iSA "$package")"
 
 		# If the package is in the sync repos, use pacman to install it
-		if [[ "$use_pacman" == "1" ]]; then
+		if [ "$use_pacman" == "1" ]; then
 			# Check that the pacman binary exists
 			if ! [ -f "$(command -v $PACMAN_BIN)" ] ; then
 				printr "ERR Command $PACMAN_BIN not found, cannot use pacman. Edit the PACMAN_BIN variable in $CONFIG_FILE_PATH and change it to the path to pacman"
