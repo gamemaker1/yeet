@@ -113,7 +113,7 @@ else
 	echo "PRINT_LOGO=true" >> "$CONFIG_FILE_PATH"
 
 	# If there is no config yet and the operation is not 'help', definitely print the logo
-	if [ "$1" != "-h" ] && ! [ -z "$1" ]; then
+	if [ "$1" != "-h" ] && [ "$1" != "--help" ] && ! [ -z "$1" ]; then
 		print_logo
 	fi
 	# Then turn it off, we don't want to print again
@@ -137,7 +137,7 @@ fi
 # Print out the logo, unless specified otherwise in the config (generated using command `figlet -f pagga YEET`)
 if [ "$PRINT_LOGO" == "true" ]; then
 	# Make sure the operation is not 'help', else we will be printing the logo twice
-	if [ "$1" != "-h" ] && ! [ -z "$1" ]; then
+	if [ "$1" != "-h" ] && [ "$1" != "--help" ] && ! [ -z "$1" ]; then
 		print_logo
 	fi
 fi
@@ -151,7 +151,7 @@ fi
 # yeet -R <package name>         - Remove the specified package(s)
 # yeet -Q [options]              - Run pacman -Q
 # yeet <package search terms>    - Search for a package and install it
-if [ "$1" == "-h" ] || [ -z "$1" ]; then
+if [ "$1" == "-h" ] || [ "$1" == "--help" ] || [ -z "$1" ]; then
 	operation="help"
 elif [ "$1" == "-U" ] || [ "$1" == "-Syyu" ] || [ "$1" == "-Syu" ] || [ "$1" == "-SyyU" ] || [ "$1" == "-SyU" ] || [ "$1" == "-Syy" ] || [ "$1" == "-Sy" ] || [ "$1" == "-Suu" ] || [ "$1" == "-Su" ] || [ "$1" == "-SUU" ] || [ "$1" == "-SU" ]; then
 	# Update all packages
