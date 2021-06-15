@@ -153,9 +153,11 @@ fi
 # yeet <package search terms>    - Search for a package and install it
 if [ "$1" == "-h" ] || [ -z "$1" ]; then
 	operation="help"
-elif [ "$1" == "-U" ]; then
+elif [ "$1" == "-U" ] || [ "$1" == "-Syyu" ] || [ "$1" == "-Syu" ] || [ "$1" == "-SyyU" ] || [ "$1" == "-SyU" ] || [ "$1" == "-Syy" ] || [ "$1" == "-Sy" ] || [ "$1" == "-Suu" ] || [ "$1" == "-Su" ] || [ "$1" == "-SUU" ] || [ "$1" == "-SU" ]; then
 	# Update all packages
-	operation="update"
+	operation="updateinstall"
+	# Shift the params so the second one is the first, the third is the second and so on
+	shift
 elif [ "$1" == "-s" ]; then
 	# Search for a package
 	operation="search"
@@ -164,11 +166,6 @@ elif [ "$1" == "-s" ]; then
 elif [ "$1" == "-S" ]; then
 	# Install package(s)
 	operation="install"
-	# Shift the params so the second one is the first, the third is the second and so on
-	shift
-elif [ "$1" == "-Syy" ]; then
-	# Install package(s)
-	operation="updateinstall"
 	# Shift the params so the second one is the first, the third is the second and so on
 	shift
 elif [ "$1" == "-R" ]; then
@@ -219,8 +216,7 @@ function update_packages {
 	printb "==> Searching for packages to update..."
 	aur_packages_to_update=$(package-query --rsort=p -uA || echo "")
 	if [ -z "$aur_packages_to_update" ]; then
-		printw "==> Nothing to do; exiting!"
-		exit 0
+		printw "==> Nothing to do"
 	else
 		echo "$aur_packages_to_update"
 		printg "==> Updating all the above packages"
@@ -229,14 +225,12 @@ function update_packages {
 		printg "==> Succesfully updated all packages from AUR!"
 	fi
 }
-
 # Search for a package
 function search_packages {
 	printb "==> Searching for $*..."
 	# Search the sync repos and AUR
 	package-query --rsort=p -sSA "$*"
 }
-
 # Install package(s)
 function install_packages {
 	# Loop through the packages and install each one
@@ -321,14 +315,22 @@ function install_packages {
 		printg "==> Installed $package successfully"
 	done
 }
-
+# Update the sync repos and then install package(s)
+function updateinstall_packages {
+	# First update the repos
+	update_packages
+	
+	# Then install package(s)
+	if ! [ -z "$*" ]; then
+		install_packages $*
+	fi
+}
 # Remove package(s)
 function remove_packages {
 	printb "==> Removing $(join_by ', ' $*)..."
 	require_root pacman -Rs $*
 	printg "==> Removed $(join_by ', ' $*) successfully"
 }
-
 # Search for a package and install it
 function searchinstall_packages {
 	# Search for packages
@@ -349,9 +351,9 @@ function searchinstall_packages {
 # Call the appropriate function
 case "$operation" in
 	"help") help;;
-	"update") update_packages;;
 	"search") search_packages $*;;
 	"install") install_packages $*;;
+	"updateinstall") updateinstall_packages $*;;
 	"remove") remove_packages $*;;
 	"pacman") require_root $PACMAN_BIN $*;;
 	"searchinstall") searchinstall_packages $*;;
