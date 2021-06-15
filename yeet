@@ -113,7 +113,7 @@ else
 	echo "PRINT_LOGO=true" >> "$CONFIG_FILE_PATH"
 
 	# If there is no config yet and the operation is not 'help', definitely print the logo
-	if [[ "$1" != "-h" ]] || [ -z "$1" ]; then
+	if [[ "$1" != "-h" ]] && ! [ -z "$1" ]; then
 		print_logo
 	fi
 	# Then turn it off, we don't want to print again
@@ -137,7 +137,7 @@ fi
 # Print out the logo, unless specified otherwise in the config (generated using command `figlet -f pagga YEET`)
 if [[ "$PRINT_LOGO" == "true" ]]; then
 	# Make sure the operation is not 'help', else we will be printing the logo twice
-	if [[ "$1" != "-h" ]] || [ -z "$1" ]; then
+	if [[ "$1" != "-h" ]] && ! [ -z "$1" ]; then
 		print_logo
 	fi
 fi
