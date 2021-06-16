@@ -64,6 +64,70 @@ function require_root {
 		$*
 	fi
 }
+# Print package summary and import GPG keys if needed
+function print_package_summary {
+	package_name=""
+	package_desc=""
+	package_ver=""
+	url=""
+	license=""
+	dependencies=()
+	pgpkeys=()
+
+	IFS="="
+	while read -r name value; do
+		key="$(echo $name | tr -d '[:space:]')"
+		if [[ "$key" == "depends" ]]; then
+			# Remove version numbers
+			value="${value%>*}"
+			value="${value%=*}"
+			value="$(echo $value | tr -d '[:space:]')"
+			dependencies+=("$value")
+		fi
+		if [[ "$key" == "pkgname" ]]; then
+			value="$(echo $value | tr -d '[:space:]')"
+			package_name="$value"
+		fi
+		if [[ "$key" == "pkgver" ]]; then
+			value="$(echo $value | tr -d '[:space:]')"
+			package_ver="$value"
+		fi
+		if [[ "$key" == "pkgdesc" ]]; then
+			package_desc="$value"
+		fi
+		if [[ "$key" == "url" ]]; then
+			url="$value"
+		fi
+		if [[ "$key" == "license" ]]; then
+			license="$value"
+		fi
+		if [[ "$key" == "validpgpkeys" ]]; then
+			value="$(echo $value | tr -d '[:space:]')"
+			pgpkeys+=("$value")
+		fi
+	done < "$1/.SRCINFO"
+
+	# Print detailed package info
+	printg "==> Package overview:"
+	printb " -> \e[0;33mName: $package_name\e[0m"
+	printb " -> \e[0;33mVersion: $package_ver\e[0m"
+	printb " -> \e[0;33mDescription: $package_description\e[0m"
+	printb " -> \e[0;33mUpstream URL: $url\e[0m"
+	printb " -> \e[0;33mLicense: $license\e[0m"
+	printb " -> \e[0;33mDependencies (to install):\e[0m"
+	for dep in "${dependencies[@]}"; do
+		printb "  -> $(package-query -iSA "$dep")"
+	done
+
+	# Import PGP keys
+	if [[ "${#pgpkeys[@]}" != "0" ]]; then
+		printb "==> Importing PGP keys $(join_by ', ' $pgpkeys)"
+		for key in "${pgpkeys[@]}"; do
+			gpg --recv-keys "$key"
+		done
+		printg "==> Imported PGP keys successfully!"
+	fi
+}
 # Print the logo
 function print_logo {
 	printw ""
@@ -169,14 +233,14 @@ if [[ "$1" =~ $option_regex ]]; then
 	# Then test the regex
 	if [[ "$1" =~ $help_regex ]] || [[ -z "$1" ]]; then
 		operation="help"
-	elif [[ "$1" =~ $updateinstall_regex_1 ]] || [[ "$1" =~ $updateinstall_regex_2 ]]; then
-		# Update all packages
-		operation="updateinstall"
-		# Shift the params so the second one is the first, the third is the second and so on
-		shift
 	elif [[ "$1" =~ $install_regex ]]; then
 		# Install package(s)
 		operation="install"
+		# Shift the params so the second one is the first, the third is the second and so on
+		shift
+	elif [[ "$1" =~ $updateinstall_regex_1 ]] || [[ "$1" =~ $updateinstall_regex_2 ]]; then
+		# Update all packages
+		operation="updateinstall"
 		# Shift the params so the second one is the first, the third is the second and so on
 		shift
 	elif [[ "$1" =~ $search_regex ]]; then
@@ -346,9 +410,20 @@ function install_packages {
 				if ! [[ -f "$(command -v $FILE_MANAGER)" ]] ; then
 					printw "WARN Command $FILE_MANAGER not found, cannot open file manager to edit build files. Edit the FILE_MANAGER variable in $CONFIG_FILE_PATH and change it to your preferred file manager"
 				else
+					# Open the file manager
 					$FILE_MANAGER .
+					# Once they have edited everything, reprint the .SRCINFO file
+					makepkg --printsrcinfo >> .SRCINFO
 				fi
 			fi
+
+			# Parse .SRCINFO and do two things:
+			# - print package info
+			# - check if we need to import PGP keys
+			printg "==> Commencing build process..."
+			
+			# Get package details
+			print_package_summary "."
 
 			printg "==> Building $package..."
 			
@@ -392,6 +467,9 @@ function build_packages {
 	fi
 
 	printg "==> Found PKGBUILD!"
+
+	print_package_summary "$1"
+
 	printg "==> Building package..."
 
 	# Build, but don't install the package
