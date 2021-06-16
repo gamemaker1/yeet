@@ -76,10 +76,16 @@ fi
 printg " ==> Starting build process..."
 
 # The build dir is the same as if we were installing yeet using yeet
+# Clear the build dir (in case it already exists)
+rm -rf "${XDG_CACHE_HOME:-$HOME/.cache}/yeet/build/yeet/"
+# Create it again
 mkdir -p "${XDG_CACHE_HOME:-$HOME/.cache}/yeet/build/yeet/"
+# Move into the dir
 cd "${XDG_CACHE_HOME:-$HOME/.cache}/yeet/build/yeet/"
-git clone https://aur.archlinux.org/yeet.git
-cd yeet
+
+# Clone the repository
+git clone https://aur.archlinux.org/yeet.git .
+# Build
 makepkg -sic
 
 # No need to print any message after install, the postinstall function already takes care of that

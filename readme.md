@@ -1,12 +1,14 @@
 # YEET
 
-Yet another minimalistic [pacman](https://wiki.archlinux.org/title/Pacman) wrapper. Yeet!
+Yet another minimal [pacman](https://wiki.archlinux.org/title/Pacman) wrapper. Yeet!
 
 Inspired by several AMAZING projects: [`pacaur`](https://aur.archlinux.org/pacaur), [`pikaur`](https://aur.archlinux.org/pikaur), [`yay`](https://aur.archlinux.org/yay) and [`paru`](https://aur.archlinux.org/paru). Uses [`package-query`](https://aur.archlinux.org/package-query) to query packages from the sync repos and AUR.
 
 ## Preview
 
-![[Yeet being used](./preview.png)](./preview.png)
+![[Yeet being used to install packages](./assets/media/install-process.png)](./assets/media/install-process.png)
+
+<small>`yeet` installing a package</small>
 
 ## Installation
 
@@ -21,13 +23,13 @@ The script will perform the steps given in the [Manual Installation section](#ma
 Using `cURL`:
 
 ```
-curl https://raw.githubusercontent.com/gamemaker1/yeet/develop/install | bash
+curl https://raw.githubusercontent.com/gamemaker1/yeet/develop/assets/package/install | bash
 ```
 
 Using `wget`:
 
 ```
-wget https://raw.githubusercontent.com/gamemaker1/yeet/develop/install -O - | bash
+wget https://raw.githubusercontent.com/gamemaker1/yeet/develop/assets/package/install -O - | bash
 ```
 
 ### Manual
@@ -44,7 +46,7 @@ mkdir -p ~/.cache/yeet/build/
 cd ~/.cache/yeet/build/
 git clone https://aur.archlinux.org/yeet.git
 cd yeet
-makepkg -sic
+makepkg -sfcCi
 ```
 
 ## Usage and configuration
@@ -54,22 +56,23 @@ makepkg -sic
 - Search for a package; and then install it (`yeet <package search terms>`)
 - Install a package (`yeet -S <package-name>`)
 - Remove a package (`yeet -R <package-name>`)
-- Upgrade all packages (`yeet` OR `yeet -U`)
+- Build an AUR package using its PKGBUILD (`yeet -B <path to package dir>`)
+- Upgrade all packages (`yeet -U`)
 - Run pacman -Q (`yeet -Q`)
 
-`yeet` can be configured using its config file, located at `$XDG_CONFIG_HOME/yeet/yeet.conf` OR `$HOME/.config/yeet/yeet.conf`. [Here](./yeet.example.conf) is an example configuration.
+`yeet` can be configured using its config file, located at `$XDG_CONFIG_HOME/yeet/yeet.conf` OR `$HOME/.config/yeet/yeet.conf`. [Here](./assets/package/yeet.example.conf) is an example configuration.
 
 ## Contributing
 
 Thank you for your interest in contributing to `yeet`!
 
-You can contribute to `yeet` by spreading the word, spotting and fixing bugs, and help adding new features. `yeet` is just a bash script, you may edit [the file](./yeet) and submit a pull request. Suggestions and PRs welcome!
+You can contribute to `yeet` by spreading the word, spotting and fixing bugs, and help adding new features. `yeet` is just a bash script, you may edit [the file](./source/yeet) and submit a pull request. Suggestions and PRs welcome!
 
 ## License
 
 ### GNU GPL v3
 
-Copyright (C) 2021 Vedant K (gamemaker1) \<gamemaker0042@gmail.com\>
+Copyright (C) 2021 Vedant K (gamemaker1) \<gamemaker0042 at gmail dot com\>
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by

@@ -19,6 +19,8 @@
 unalias -a
 # Fail and exit when the first error occurs
 set -e
+# Enable globs
+shopt -s nullglob
 # For debbuging
 #set -xv
 # package-query colors
@@ -62,6 +64,70 @@ function require_root {
 		$*
 	fi
 }
+# Print package summary and import GPG keys if needed
+function print_package_summary {
+	package_name=""
+	package_desc=""
+	package_ver=""
+	url=""
+	license=""
+	dependencies=()
+	pgpkeys=()
+
+	IFS="="
+	while read -r name value; do
+		key="$(echo $name | tr -d '[:space:]')"
+		if [[ "$key" == "depends" ]]; then
+			# Remove version numbers
+			value="${value%>*}"
+			value="${value%=*}"
+			value="$(echo $value | tr -d '[:space:]')"
+			dependencies+=("$value")
+		fi
+		if [[ "$key" == "pkgname" ]]; then
+			value="$(echo $value | tr -d '[:space:]')"
+			package_name="$value"
+		fi
+		if [[ "$key" == "pkgver" ]]; then
+			value="$(echo $value | tr -d '[:space:]')"
+			package_ver="$value"
+		fi
+		if [[ "$key" == "pkgdesc" ]]; then
+			package_desc="$value"
+		fi
+		if [[ "$key" == "url" ]]; then
+			url="$value"
+		fi
+		if [[ "$key" == "license" ]]; then
+			license="$value"
+		fi
+		if [[ "$key" == "validpgpkeys" ]]; then
+			value="$(echo $value | tr -d '[:space:]')"
+			pgpkeys+=("$value")
+		fi
+	done < "$1/.SRCINFO"
+
+	# Print detailed package info
+	printg "==> Package overview:"
+	printb " -> \e[0;33mName: $package_name\e[0m"
+	printb " -> \e[0;33mVersion: $package_ver\e[0m"
+	printb " -> \e[0;33mDescription: $package_description\e[0m"
+	printb " -> \e[0;33mUpstream URL: $url\e[0m"
+	printb " -> \e[0;33mLicense: $license\e[0m"
+	printb " -> \e[0;33mDependencies (to install):\e[0m"
+	for dep in "${dependencies[@]}"; do
+		printb "  -> $(package-query -iSA "$dep")"
+	done
+
+	# Import PGP keys
+	if [[ "${#pgpkeys[@]}" != "0" ]]; then
+		printb "==> Importing PGP keys $(join_by ', ' $pgpkeys)"
+		for key in "${pgpkeys[@]}"; do
+			gpg --recv-keys "$key"
+		done
+		printg "==> Imported PGP keys successfully!"
+	fi
+}
 # Print the logo
 function print_logo {
 	printw ""
@@ -71,7 +137,7 @@ function print_logo {
 	printw "░░▀░░▀▀▀░▀▀▀░░▀░░"
 	printw "░░░░░░░░░░░░░░░░░"
 	printw ""
-	printw "v0.1.0"
+	printw "v0.3.0"
 	printw ""
 }
 
@@ -113,7 +179,7 @@ else
 	echo "PRINT_LOGO=true" >> "$CONFIG_FILE_PATH"
 
 	# If there is no config yet and the operation is not 'help', definitely print the logo
-	if [[ "$1" != "-h" ]] || [ -z "$1" ]; then
+	if [[ "$1" != "-h" ]] && [[ "$1" != "--help" ]] && ! [[ -z "$1" ]]; then
 		print_logo
 	fi
 	# Then turn it off, we don't want to print again
@@ -137,43 +203,68 @@ fi
 # Print out the logo, unless specified otherwise in the config (generated using command `figlet -f pagga YEET`)
 if [[ "$PRINT_LOGO" == "true" ]]; then
 	# Make sure the operation is not 'help', else we will be printing the logo twice
-	if [[ "$1" != "-h" ]] || [ -z "$1" ]; then
+	if [[ "$1" != "-h" ]] && [[ "$1" != "--help" ]] && ! [[ -z "$1" ]]; then
 		print_logo
 	fi
 fi
 
 ## OPTION parsing
-# Usage:
+# Regex for the options:
+option_regex="^\-"
 # yeet -h                        - Print this help text
-# yeet -U                        - Update all packages
-# yeet -s <package search terms> - Search for a package
+help_regex="(\-h|\-\-help)"
+# yeet -U OR yeet -Syyu          - Update all packages
 # yeet -S <package name>         - Install the specified package(s)
+updateinstall_regex_1="\-S(U)*(y)*(u)*"
+updateinstall_regex_2="\-U"
+install_regex="\-S"
+# yeet -s <package search terms> - Search for a package
+search_regex="\-s"
 # yeet -R <package name>         - Remove the specified package(s)
+remove_regex="\-Rs*"
+# yeet -B <path to package dir>  - Build an AUR package
+build_regex="\-B"
 # yeet -Q [options]              - Run pacman -Q
+pacman_regex="\-Q.*"
 # yeet <package search terms>    - Search for a package and install it
-if [ "$1" == "-h" ] || [ -z "$1" ]; then
-	operation="help"
-elif [ "$1" == "-U" ]; then
-	# Update all packages
-	operation="update"
-elif [ "$1" == "-s" ]; then
-	# Search for a package
-	operation="search"
-	# Shift the params so the second one is the first, the third is the second and so on
-	shift
-elif [ "$1" == "-S" ]; then
-	# Install package(s)
-	operation="install"
-	# Shift the params so the second one is the first, the third is the second and so on
-	shift
-elif [ "$1" == "-R" ]; then
-	# Remove package(s)
-	operation="remove"
-	# Shift the params so the second one is the first, the third is the second and so on
-	shift
-elif [[ "$1" == "-Q" ]] || [[ "$1" == "-Q"* ]]; then
-	# If the first option is -Q and the like (e.g., -Ql), then let pacman handle it
-	operation="pacman"
+
+# First check if the first param is an option
+if [[ "$1" =~ $option_regex ]]; then
+	# Then test the regex
+	if [[ "$1" =~ $help_regex ]] || [[ -z "$1" ]]; then
+		operation="help"
+	elif [[ "$1" =~ $install_regex ]]; then
+		# Install package(s)
+		operation="install"
+		# Shift the params so the second one is the first, the third is the second and so on
+		shift
+	elif [[ "$1" =~ $updateinstall_regex_1 ]] || [[ "$1" =~ $updateinstall_regex_2 ]]; then
+		# Update all packages
+		operation="updateinstall"
+		# Shift the params so the second one is the first, the third is the second and so on
+		shift
+	elif [[ "$1" =~ $search_regex ]]; then
+		# Search for a package
+		operation="search"
+		# Shift the params so the second one is the first, the third is the second and so on
+		shift
+	elif [[ "$1" =~ $remove_regex ]]; then
+		# Remove package(s)
+		operation="remove"
+		# Shift the params so the second one is the first, the third is the second and so on
+		shift
+	elif [[ "$1" =~ $build_regex ]]; then
+		# Build package
+		operation="build"
+		# Shift the params so the second one is the first, the third is the second and so on
+		shift
+	elif [[ "$1" =~ $pacman_regex ]]; then
+		# If the first option is -Q and the like (e.g., -Ql), then let pacman handle it
+		operation="pacman"
+	else
+		# Invalid option, show help
+		operation="help"
+	fi
 else
 	# Search for a package and install it
 	operation="searchinstall"
@@ -190,6 +281,7 @@ function help {
 	printw "\e[0;34mSearch for a package                 \e[1;33m yeet -s <package search terms>"
 	printw "\e[0;34mInstall the specified package(s)     \e[1;33m yeet -S <package name>"
 	printw "\e[0;34mRemove the specified package(s)      \e[1;33m yeet -R <package name>"
+	printw "\e[0;34mBuild an AUR package                 \e[1;33m yeet -B <path to package dir>"
 	printw "\e[0;34mRun pacman -Q                        \e[1;33m yeet -Q [options]"
 	printw "\e[0;34mSearch for a package and install it  \e[1;33m yeet <package search terms>"
 }
@@ -200,7 +292,7 @@ function update_packages {
 	# First update packages from sync repos
 	printb "==> Updating packages from sync repos using pacman..."
 	# Check that the pacman binary exists
-	if ! [ -f "$(command -v $PACMAN_BIN)" ] ; then
+	if ! [[ -f "$(command -v $PACMAN_BIN)" ]] ; then
 		printr "ERR Command $PACMAN_BIN not found, cannot use pacman. Edit the PACMAN_BIN variable in $CONFIG_FILE_PATH and change it to the path to pacman"
 		exit 2
 	else
@@ -213,9 +305,8 @@ function update_packages {
 	printb "==> Updating packages from AUR..."
 	printb "==> Searching for packages to update..."
 	aur_packages_to_update=$(package-query --rsort=p -uA || echo "")
-	if [ -z "$aur_packages_to_update" ]; then
-		printw "==> Nothing to do; exiting!"
-		exit 0
+	if [[ -z "$aur_packages_to_update" ]]; then
+		printw "==> Nothing to do"
 	else
 		echo "$aur_packages_to_update"
 		printg "==> Updating all the above packages"
@@ -224,14 +315,12 @@ function update_packages {
 		printg "==> Succesfully updated all packages from AUR!"
 	fi
 }
-
 # Search for a package
 function search_packages {
 	printb "==> Searching for $*..."
 	# Search the sync repos and AUR
 	package-query --rsort=p -sSA "$*"
 }
-
 # Install package(s)
 function install_packages {
 	# Loop through the packages and install each one
@@ -262,7 +351,7 @@ function install_packages {
 		# If the package is in the sync repos, use pacman to install it
 		if [[ "$use_pacman" == "1" ]]; then
 			# Check that the pacman binary exists
-			if ! [ -f "$(command -v $PACMAN_BIN)" ] ; then
+			if ! [[ -f "$(command -v $PACMAN_BIN)" ]] ; then
 				printr "ERR Command $PACMAN_BIN not found, cannot use pacman. Edit the PACMAN_BIN variable in $CONFIG_FILE_PATH and change it to the path to pacman"
 				exit 2
 			else
@@ -276,20 +365,38 @@ function install_packages {
 			mkdir -p "$YEET_CACHE_DIR/build/"
 			cd "$YEET_CACHE_DIR/build/"
 			# Check if the package is already built
-			if [ -d "$package" ]; then
+			if [[ -d "$package" ]]; then
+				# Ask the user if they want to rebuild the package
 				read -p $'\e[1;33m ==> Package is already built, rebuild?\e[0m [\e[1;32my\e[0m/\e[1;31mN\e[0m] ' -n 1 -r
 				
 				if [[ $REPLY =~ ^[Yy]$ ]]; then
+					# If yes, delete the package dir and clone it again
 					printb "\n==> Rebuilding $package..."
 					rm -rf "$package"
 					git clone --quiet "$AUR_URL/$package.git" "$package"
+				else
+					# If not, install it with pacman -U and exit
+					cd "$package"
+					# Check if there is a .pkg.tar.zst file
+					if [[ -n $(echo *.pkg.tar.zst) ]]; then
+						# If there is, install it
+						require_root $PACMAN_BIN -U *.pkg.tar.zst
+						printg "==> Installed $package successfully"
+						return
+					else
+						# Else error out
+						printr "ERR Could not find prebuilt package! Try rebuilding the package."
+						return 1
+					fi
 				fi
 			else
+				# If it is not already built, clone it
 				git clone --quiet "$AUR_URL/$package.git" "$package"
 			fi
 
 			# If the package exists, the directory exists, else it does not exist
-			if ! [ -d "$package" ]; then
+			# Ideally this should not happen
+			if ! [[ -d "$package" ]]; then
 				printr "ERR Package $package not found in AUR!"
 				exit 1
 			fi
@@ -300,30 +407,100 @@ function install_packages {
 
 			if [[ $REPLY =~ ^[Yy]$ ]]; then
 				printb "\n==> Editing build files for $package..."
-				if ! [ -f "$(command -v $FILE_MANAGER)" ] ; then
+				if ! [[ -f "$(command -v $FILE_MANAGER)" ]] ; then
 					printw "WARN Command $FILE_MANAGER not found, cannot open file manager to edit build files. Edit the FILE_MANAGER variable in $CONFIG_FILE_PATH and change it to your preferred file manager"
 				else
+					# Open the file manager
 					$FILE_MANAGER .
+					# Once they have edited everything, reprint the .SRCINFO file
+					makepkg --printsrcinfo >> .SRCINFO
 				fi
 			fi
 
+			# Parse .SRCINFO and do two things:
+			# - print package info
+			# - check if we need to import PGP keys
+			printg "==> Commencing build process..."
+			
+			# Get package details
+			print_package_summary "."
+
 			printg "==> Building $package..."
 			
-			# Build it
-			makepkg -sic
+			# Build, install and clean up
+			makepkg -sfCci
 		fi
 
 		printg "==> Installed $package successfully"
 	done
 }
-
+# Update the sync repos and then install package(s)
+function updateinstall_packages {
+	# First update the repos
+	update_packages
+	
+	# Then install package(s)
+	if ! [[ -z "$*" ]]; then
+		install_packages $*
+	fi
+}
 # Remove package(s)
 function remove_packages {
 	printb "==> Removing $(join_by ', ' $*)..."
-	require_root pacman -Rs $*
+	require_root $PACMAN_BIN -Rs $*
 	printg "==> Removed $(join_by ', ' $*) successfully"
 }
+# Build a package
+function build_packages {
+	printb "==> Building AUR package from contents of directory $1..."
+	# First check if the directory exists
+	if ! [[ -d "$1" ]]; then
+		printr "ERR Directory $1 does not exist!"
+		exit 1
+	fi
+	
+	printb "==> Searching for PKGBUILD in directory $1..."
+	# Then check if there is a PKGBUILD in that directory
+	if ! [[ -f "$1/PKGBUILD" ]]; then
+		printr "ERR Could not find PKGBUILD in $1!"
+		exit 1
+	fi
 
+	printg "==> Found PKGBUILD!"
+
+	print_package_summary "$1"
+
+	printg "==> Building package..."
+
+	# Build, but don't install the package
+	cd "$1"
+	makepkg -sfCc
+
+	printg "==> Package built succesfully!"
+
+	# Ask the user if they want to install the package
+	read -p $'\e[1;33m ==> Install package?\e[0m [\e[1;32my\e[0m/\e[1;31mN\e[0m] ' -n 1 -r
+	if [[ $REPLY =~ ^[Yy]$ ]] || [[ -z "$REPLY" ]]; then
+		printb "==> Installing..."
+		
+		# Install the package using pacman
+		# Check if there is a .pkg.tar.zst file
+		if [[ -n $(echo *.pkg.tar.zst) ]]; then
+			# If there is, install it
+			require_root $PACMAN_BIN -U *.pkg.tar.zst
+			printg "==> Package installed successfully!"
+			return
+		else
+			# Else attempt to rebuild and directly install it
+			printr "ERR Could not find prebuilt package! Attempting to rebuild package..."
+			makepkg -sfCci
+			printg "==> Package installed successfully!"
+			return
+		fi
+	else
+		printw "==> Package built; but not installed. Run \`yeet -B $1\` again if you want to install the package."
+	fi
+}
 # Search for a package and install it
 function searchinstall_packages {
 	# Search for packages
@@ -332,7 +509,7 @@ function searchinstall_packages {
 	# Ask the user what packages they want to install
 	read -p $'\e[1;33m==> Enter names of the packages to install, separated by spaces:\e[0m ' -r
 	printb
-	if [ -z "$REPLY" ]; then
+	if [[ -z "$REPLY" ]]; then
 		printr "==> No packages selected, aborting!"
 		exit 127
 	fi
@@ -344,10 +521,11 @@ function searchinstall_packages {
 # Call the appropriate function
 case "$operation" in
 	"help") help;;
-	"update") update_packages;;
 	"search") search_packages $*;;
 	"install") install_packages $*;;
+	"updateinstall") updateinstall_packages $*;;
 	"remove") remove_packages $*;;
+	"build") build_packages $*;;
 	"pacman") require_root $PACMAN_BIN $*;;
 	"searchinstall") searchinstall_packages $*;;
 esac
