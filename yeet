@@ -149,6 +149,7 @@ fi
 # yeet -s <package search terms> - Search for a package
 # yeet -S <package name>         - Install the specified package(s)
 # yeet -R <package name>         - Remove the specified package(s)
+# yeet -B <path to package dir>  - Build an AUR package
 # yeet -Q [options]              - Run pacman -Q
 # yeet <package search terms>    - Search for a package and install it
 if [ "$1" == "-h" ] || [ "$1" == "--help" ] || [ -z "$1" ]; then
@@ -173,6 +174,11 @@ elif [ "$1" == "-R" ]; then
 	operation="remove"
 	# Shift the params so the second one is the first, the third is the second and so on
 	shift
+elif [ "$1" == "-B" ]; then
+	# Build package
+	operation="build"
+	# Shift the params so the second one is the first, the third is the second and so on
+	shift
 elif [ "$1" == "-Q" ] || [ "$1" == "-Q"* ]; then
 	# If the first option is -Q and the like (e.g., -Ql), then let pacman handle it
 	operation="pacman"
@@ -192,6 +198,7 @@ function help {
 	printw "\e[0;34mSearch for a package                 \e[1;33m yeet -s <package search terms>"
 	printw "\e[0;34mInstall the specified package(s)     \e[1;33m yeet -S <package name>"
 	printw "\e[0;34mRemove the specified package(s)      \e[1;33m yeet -R <package name>"
+	printw "\e[0;34mBuild an AUR package                 \e[1;33m yeet -B <path to package dir>"
 	printw "\e[0;34mRun pacman -Q                        \e[1;33m yeet -Q [options]"
 	printw "\e[0;34mSearch for a package and install it  \e[1;33m yeet <package search terms>"
 }
@@ -331,6 +338,44 @@ function remove_packages {
 	require_root pacman -Rs $*
 	printg "==> Removed $(join_by ', ' $*) successfully"
 }
+# Build a package
+function build_packages {
+	printb "==> Building AUR package from contents of directory $1..."
+	# First check if the directory exists
+	if ! [ -d "$1" ]; then
+		printr "ERR Directory $1 does not exist!"
+		exit 1
+	fi
+	
+	printb "==> Searching for PKGBUILD in directory $1..."
+	# Then check if there is a PKGBUILD in that directory
+	if ! [ -f "$1/PKGBUILD" ]; then
+		printr "ERR Could not find PKGBUILD in $1!"
+		exit 1
+	fi
+
+	printg "==> Found PKGBUILD!"
+	printg "==> Building package..."
+
+	# Build, but don't install the package
+	cd "$1"
+	makepkg -sfCc
+
+	printg "==> Package built succesfully!"
+
+	# Ask the user if they want to install the package
+	read -p $'\e[1;33m ==> Install package?\e[0m [\e[1;32my\e[0m/\e[1;31mN\e[0m] ' -n 1 -r
+	if [[ $REPLY =~ ^[Yy]$ ]] || [ -z "$REPLY"]; then
+		printb "==> Installing..."
+		
+		# Install the package using pacman
+		require_root pacman -U *.pkg.tar.zst
+
+		printg "==> Package installed successfully!"
+	else
+		printw "==> Package built; but not installed. Run \`yeet -B $1\` again if you want to install the package."
+	fi
+}
 # Search for a package and install it
 function searchinstall_packages {
 	# Search for packages
@@ -355,6 +400,7 @@ case "$operation" in
 	"install") install_packages $*;;
 	"updateinstall") updateinstall_packages $*;;
 	"remove") remove_packages $*;;
+	"build") build_packages $*;;
 	"pacman") require_root $PACMAN_BIN $*;;
 	"searchinstall") searchinstall_packages $*;;
 esac

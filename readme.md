@@ -54,6 +54,7 @@ makepkg -sic
 - Search for a package; and then install it (`yeet <package search terms>`)
 - Install a package (`yeet -S <package-name>`)
 - Remove a package (`yeet -R <package-name>`)
+- Build an AUR package using its PKGBUILD (`yeet -B <path to package dir>`)
 - Upgrade all packages (`yeet -U`)
 - Run pacman -Q (`yeet -Q`)
 
