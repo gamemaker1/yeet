@@ -19,6 +19,8 @@
 unalias -a
 # Fail and exit when the first error occurs
 set -e
+# Enable globs
+shopt -s nullglob
 # For debbuging
 #set -xv
 # package-query colors
@@ -311,9 +313,17 @@ function install_packages {
 				else
 					# If not, install it with pacman -U and exit
 					cd "$package"
-					require_root $PACMAN_BIN -U *.pkg.tar.zst
-					printg "==> Installed $package successfully"
-					return $?
+					# Check if there is a .pkg.tar.zst file
+					if [[ -n $(echo *.pkg.tar.zst) ]]; then
+						# If there is, install it
+						require_root $PACMAN_BIN -U *.pkg.tar.zst
+						printg "==> Installed $package successfully"
+						return
+					else
+						# Else error out
+						printr "ERR Could not find prebuilt package! Try rebuilding the package."
+						return 1
+					fi
 				fi
 			else
 				# If it is not already built, clone it
@@ -396,9 +406,19 @@ function build_packages {
 		printb "==> Installing..."
 		
 		# Install the package using pacman
-		require_root $PACMAN_BIN -U *.pkg.tar.zst
-
-		printg "==> Package installed successfully!"
+		# Check if there is a .pkg.tar.zst file
+		if [[ -n $(echo *.pkg.tar.zst) ]]; then
+			# If there is, install it
+			require_root $PACMAN_BIN -U *.pkg.tar.zst
+			printg "==> Package installed successfully!"
+			return
+		else
+			# Else attempt to rebuild and directly install it
+			printr "ERR Could not find prebuilt package! Attempting to rebuild package..."
+			makepkg -sfCci
+			printg "==> Package installed successfully!"
+			return
+		fi
 	else
 		printw "==> Package built; but not installed. Run \`yeet -B $1\` again if you want to install the package."
 	fi
