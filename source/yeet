@@ -144,6 +144,7 @@ fi
 
 ## OPTION parsing
 # Regex for the options:
+option_regex="^\-"
 # yeet -h                        - Print this help text
 help_regex="(\-h|\-\-help)"
 # yeet -U OR yeet -Syyu          - Update all packages
