@@ -137,7 +137,7 @@ function print_logo {
 	printw "░░▀░░▀▀▀░▀▀▀░░▀░░"
 	printw "░░░░░░░░░░░░░░░░░"
 	printw ""
-	printw "v0.1.0"
+	printw "v0.3.0"
 	printw ""
 }
 
