@@ -6,7 +6,9 @@ Inspired by several AMAZING projects: [`pacaur`](https://aur.archlinux.org/pacau
 
 ## Preview
 
-![[Yeet being used](./assets/media/preview.png)](./assets/media/preview.png)
+![[Yeet being used to install packages](./assets/media/install-process.png)](./assets/media/install-process.png)
+
+<small>`yeet` installing a package</small>
 
 ## Installation
 
