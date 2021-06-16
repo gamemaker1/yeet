@@ -76,7 +76,7 @@ fi
 printg " ==> Starting build process..."
 
 # The build dir is the same as if we were installing yeet using yeet
-# Clear the build dir (in case it already exists
+# Clear the build dir (in case it already exists)
 rm -rf "${XDG_CACHE_HOME:-$HOME/.cache}/yeet/build/yeet/"
 # Create it again
 mkdir -p "${XDG_CACHE_HOME:-$HOME/.cache}/yeet/build/yeet/"
