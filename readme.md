@@ -60,7 +60,10 @@ makepkg -sfcCi
 - Remove a package (`yeet -R <package-name>`)
 - Build an AUR package using its PKGBUILD (`yeet -B <path to package dir>`)
 - Upgrade all packages (`yeet -U`)
-- Run pacman -Q (`yeet -Q`)
+- Run pacman -D (`yeet -D [options]`)
+- Run pacman -F (`yeet -F [options]`)
+- Run pacman -Q (`yeet -Q [options]`)
+- Run pacman -T (`yeet -T [options]`)
 
 `yeet` can be configured using its config file, located at `$XDG_CONFIG_HOME/yeet/yeet.conf` OR `$HOME/.config/yeet/yeet.conf`. [Here](./assets/package/yeet.example.conf) is an example configuration.
 
