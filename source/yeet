@@ -66,14 +66,29 @@ function require_root {
 }
 # Print package summary and import GPG keys if needed
 function print_package_summary {
-	package_name=""
-	package_desc=""
-	package_ver=""
+	# First check if a .SRCINFO file exists in the dir
+	if ! [[ -f "$1/.SRCINFO" ]]; then
+		printr "ERR No .SRCINFO file exists; cannot parse package info; try rebuilding the package"
+		return 1
+	fi
+
+	# Parse the .SRCINFO file to get the following info:
+	# Package name
+	name=""
+	# Package description
+	desc=""
+	# Package version
+	ver=""
+	# Upstream URL
 	url=""
+	# License(s)
 	license=""
+	# Dependencies
 	dependencies=()
+	# Valid PGP signing keys
 	pgpkeys=()
 
+	# Parse it
 	IFS="="
 	while read -r key value; do
 		# Remove all spaces in the key and the leading space in the value
@@ -101,7 +116,7 @@ function print_package_summary {
 			url="$value"
 		fi
 		if [[ "$key" == "license" ]]; then
-			license="$value"
+			license+="$value "
 		fi
 		if [[ "$key" == "validpgpkeys" ]]; then
 			value="$(echo $value | tr -d '[:space:]')"
