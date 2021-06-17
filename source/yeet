@@ -260,7 +260,7 @@ pacman_regex="\-[DFQT].*"
 # yeet <package search terms>    - Search for a package and install it
 
 # First check if the first param is an option
-if [[ "$1" =~ $option_regex ]]; then
+if [[ "$1" =~ $option_regex ]] || [[ -z "$1" ]]; then
 	# Then test the regex
 	if [[ "$1" =~ $help_regex ]] || [[ -z "$1" ]]; then
 		operation="help"
