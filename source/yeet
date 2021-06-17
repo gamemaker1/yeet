@@ -3,7 +3,7 @@
 ## YEET
 ## ----
 
-# A minimalistic pacman wrapper
+# A minimalistic AUR helper/pacman wrapper
 
 ## CREDITS
 # ASCII art using the figlet CLI from AUR (https://aur.archlinux.org/packages/figlet) and the pagga font from the figlet-fonts-extra package from AUR (https://aur.archlinux.org/packages/figlet-fonts-extra_)
@@ -191,6 +191,8 @@ else
 	echo "# " >> "$CONFIG_FILE_PATH"
 	echo "## CONFIGURATION FILE" >> "$CONFIG_FILE_PATH"
 	echo "## ------------------" >> "$CONFIG_FILE_PATH"
+	echo "# " >> "$CONFIG_FILE_PATH"
+	echo "# If you want, you can set any of the following as environment variables as well (though it will not be permanent)" >> "$CONFIG_FILE_PATH"
 	echo "# " >> "$CONFIG_FILE_PATH"
 	echo "# URL for AUR" >> "$CONFIG_FILE_PATH"
 	echo "AUR_BASE_URL=\"https://aur.archlinux.org\"" >> "$CONFIG_FILE_PATH"
