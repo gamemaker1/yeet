@@ -413,7 +413,7 @@ function install_packages {
 					# Open the file manager
 					$FILE_MANAGER .
 					# Once they have edited everything, reprint the .SRCINFO file
-					makepkg --printsrcinfo >> .SRCINFO
+					makepkg --printsrcinfo > .SRCINFO
 				fi
 			fi
 
