@@ -6,9 +6,9 @@ Inspired by several AMAZING projects: [`pacaur`](https://aur.archlinux.org/pacau
 
 ## Preview
 
-![[Yeet installing spotify](./assets/media/install-process.png)](./assets/media/install-process.png)
+![[Yeet installing package-query](./assets/media/install-process.png)](./assets/media/install-process.png)
 
-[Yeet installing spotify]
+[Yeet installing package-query]
 
 More images [here](./assets/media/).
 
