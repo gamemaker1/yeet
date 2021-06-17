@@ -57,7 +57,7 @@ printw ""
 # Check if they are on arch linux
 platform=$(uname -s | tr '[:upper:]' '[:lower:]')
 case "$platform" in
-	"linux") printg " ==> Platform detected: linux" && printw " ==> Please ensure you are installing ONLY ON ARCH LINUX. This script may fail or cause CATASTROPHIC damage if run on other distros.";;
+	"linux") printg "==> Platform detected: linux" && printw "==> Please ensure you are installing ONLY ON ARCH LINUX. This script may fail or cause CATASTROPHIC damage if run on other distros.";;
 	*) printr " ERR Unsupported platform \`$platform\`; only linux/macos is supported for now."; exit 1;;
 esac
 
@@ -73,20 +73,29 @@ if ! [ -f $(command -v makepkg) ] ; then
 fi
 
 # Start building
-printg " ==> Starting build process..."
+printg "==> Starting build process..."
 
 # The build dir is the same as if we were installing yeet using yeet
+# We need to build package-query as well as yeet
+
 # Clear the build dir (in case it already exists)
-rm -rf "${XDG_CACHE_HOME:-$HOME/.cache}/yeet/build/yeet/"
+rm -rf "${XDG_CACHE_HOME:-$HOME/.cache}/yeet/build/package-query"
+rm -rf "${XDG_CACHE_HOME:-$HOME/.cache}/yeet/build/yeet"
 # Create it again
-mkdir -p "${XDG_CACHE_HOME:-$HOME/.cache}/yeet/build/yeet/"
+mkdir -p "${XDG_CACHE_HOME:-$HOME/.cache}/yeet/build/"
 # Move into the dir
-cd "${XDG_CACHE_HOME:-$HOME/.cache}/yeet/build/yeet/"
+cd "${XDG_CACHE_HOME:-$HOME/.cache}/yeet/build/"
 
-# Clone the repository
-git clone https://aur.archlinux.org/yeet.git .
-# Build
-makepkg -sic
+# Clone the repositories
+git clone https://aur.archlinux.org/package-query.git
+git clone https://aur.archlinux.org/yeet.git
 
-# No need to print any message after install, the postinstall function already takes care of that
-printb ""
+# Build package query first
+cd package-query
+makepkg -sfCci
+
+cd ../yeet
+makepkg -sfCci
+
+# Done
+printg "==> Yeet installed succesfully!"

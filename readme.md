@@ -6,9 +6,11 @@ Inspired by several AMAZING projects: [`pacaur`](https://aur.archlinux.org/pacau
 
 ## Preview
 
-![[Yeet being used to install packages](./assets/media/install-process.png)](./assets/media/install-process.png)
+![[Yeet installing package-query](./assets/media/install-process.png)](./assets/media/install-process.png)
 
-<small>`yeet` installing a package</small>
+[Yeet installing package-query]
+
+More images [here](./assets/media/).
 
 ## Installation
 
@@ -58,7 +60,10 @@ makepkg -sfcCi
 - Remove a package (`yeet -R <package-name>`)
 - Build an AUR package using its PKGBUILD (`yeet -B <path to package dir>`)
 - Upgrade all packages (`yeet -U`)
-- Run pacman -Q (`yeet -Q`)
+- Run pacman -D (`yeet -D [options]`)
+- Run pacman -F (`yeet -F [options]`)
+- Run pacman -Q (`yeet -Q [options]`)
+- Run pacman -T (`yeet -T [options]`)
 
 `yeet` can be configured using its config file, located at `$XDG_CONFIG_HOME/yeet/yeet.conf` OR `$HOME/.config/yeet/yeet.conf`. [Here](./assets/package/yeet.example.conf) is an example configuration.
 
