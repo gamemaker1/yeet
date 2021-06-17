@@ -6,9 +6,11 @@ Inspired by several AMAZING projects: [`pacaur`](https://aur.archlinux.org/pacau
 
 ## Preview
 
-![[Yeet being used to install packages](./assets/media/install-process.png)](./assets/media/install-process.png)
+![[Yeet installing spotify](./assets/media/install-process.png)](./assets/media/install-process.png)
 
-<small>`yeet` installing a package</small>
+[Yeet installing spotify]
+
+More images [here](./assets/media/).
 
 ## Installation
 

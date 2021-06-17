@@ -57,7 +57,7 @@ printw ""
 # Check if they are on arch linux
 platform=$(uname -s | tr '[:upper:]' '[:lower:]')
 case "$platform" in
-	"linux") printg " ==> Platform detected: linux" && printw " ==> Please ensure you are installing ONLY ON ARCH LINUX. This script may fail or cause CATASTROPHIC damage if run on other distros.";;
+	"linux") printg "==> Platform detected: linux" && printw "==> Please ensure you are installing ONLY ON ARCH LINUX. This script may fail or cause CATASTROPHIC damage if run on other distros.";;
 	*) printr " ERR Unsupported platform \`$platform\`; only linux/macos is supported for now."; exit 1;;
 esac
 
@@ -73,7 +73,7 @@ if ! [ -f $(command -v makepkg) ] ; then
 fi
 
 # Start building
-printg " ==> Starting build process..."
+printg "==> Starting build process..."
 
 # The build dir is the same as if we were installing yeet using yeet
 # Clear the build dir (in case it already exists)
@@ -88,5 +88,4 @@ git clone https://aur.archlinux.org/yeet.git .
 # Build
 makepkg -sic
 
-# No need to print any message after install, the postinstall function already takes care of that
-printb ""
+printg "==> Yeet installed succesfully!"
