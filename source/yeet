@@ -166,7 +166,21 @@ mkdir -p "${XDG_CONFIG_HOME:-$HOME/.config}/yeet/"
 # Now check if the user already has a config file in that dir
 if [[ -f "$CONFIG_FILE_PATH" ]]; then
 	# If the file exists, set all the variables from it
-	source "$CONFIG_FILE_PATH"
+	# Parse it
+	IFS="="
+	while read -r key value; do
+		# Remove all spaces in the key and the leading space in the value
+		key="$(echo $key | tr -d '[:space:]')"
+		value="$(echo $value | awk '{$1=$1;print}')"
+		case "$key" in
+			"AUR_URL") export AUR_URL="$value";;
+			"PACMAN_BIN") export PACMAN_BIN="$value";;
+			"SUDO_BIN") export SUDO_BIN="$value";;
+			"YEET_CACHE_DIR") export YEET_CACHE_DIR="$value";;
+			"FILE_MANAGER") export FILE_MANAGER="$value";;
+			"PRINT_LOGO") export PRINT_LOGO="$value";;
+		esac
+	done < "$CONFIG_FILE_PATH"
 else
 	# If there is no config file, create one for the user
 	echo "# ░░░░░░░░░░░░░░░░░" >> "$CONFIG_FILE_PATH"
@@ -200,18 +214,18 @@ else
 		print_logo
 	fi
 	# Then turn it off, we don't want to print again
-	PRINT_LOGO=false
+	export PRINT_LOGO=false
 	# Then set the defaults
 	# URL for AUR
-	AUR_URL="https://aur.archlinux.org"
+	export AUR_URL="https://aur.archlinux.org"
 	# Path to sudo/doas/'root helper' binary
-	SUDO_BIN=/usr/bin/sudo
+	export SUDO_BIN=/usr/bin/sudo
 	# Path to pacman binary
-	PACMAN_BIN=/usr/bin/pacman
+	export PACMAN_BIN=/usr/bin/pacman
 	# Where the packages should be cloned (defaults to ~/.cache/yeet/)
-	YEET_CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/yeet/"
+	export YEET_CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/yeet/"
 	# The file manager to use to browse the package's snapshot before building (defaults to ranger; you can enter thunar, nemo, nautilus, vim, or any other program as well)
-	FILE_MANAGER=/usr/bin/ranger
+	export FILE_MANAGER=/usr/bin/ranger
 	
 	printw "WARN No config file found, using defaults; created default config file at $CONFIG_FILE_PATH"
 fi
