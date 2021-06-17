@@ -173,12 +173,12 @@ if [[ -f "$CONFIG_FILE_PATH" ]]; then
 		key="$(echo $key | tr -d '[:space:]')"
 		value="$(echo $value | awk '{$1=$1;print}')"
 		case "$key" in
-			"AUR_URL") export AUR_URL="$value";;
-			"PACMAN_BIN") export PACMAN_BIN="$value";;
-			"SUDO_BIN") export SUDO_BIN="$value";;
-			"YEET_CACHE_DIR") export YEET_CACHE_DIR="$value";;
-			"FILE_MANAGER") export FILE_MANAGER="$value";;
-			"PRINT_LOGO") export PRINT_LOGO="$value";;
+			"AUR_BASE_URL") [[ -z "$AUR_BASE_URL" ]] && export AUR_BASE_URL="$value";;
+			"PACMAN_BIN") [[ -z "$PACMAN_BIN" ]] && export PACMAN_BIN="$value";;
+			"SUDO_BIN") [[ -z "$SUDO_BIN" ]] && export SUDO_BIN="$value";;
+			"CACHE_DIR") [[ -z "$CACHE_DIR" ]] && export CACHE_DIR="$value";;
+			"FILE_MANAGER") [[ -z "$FILE_MANAGER" ]] && export FILE_MANAGER="$value";;
+			"PRINT_LOGO") [[ -z "$PRINT_LOGO" ]] && export PRINT_LOGO="$value";;
 		esac
 	done < "$CONFIG_FILE_PATH"
 else
@@ -193,13 +193,13 @@ else
 	echo "## ------------------" >> "$CONFIG_FILE_PATH"
 	echo "# " >> "$CONFIG_FILE_PATH"
 	echo "# URL for AUR" >> "$CONFIG_FILE_PATH"
-	echo "AUR_URL=\"https://aur.archlinux.org\"" >> "$CONFIG_FILE_PATH"
+	echo "AUR_BASE_URL=\"https://aur.archlinux.org\"" >> "$CONFIG_FILE_PATH"
 	echo "# Path to pacman binary" >> "$CONFIG_FILE_PATH"
 	echo "PACMAN_BIN=/usr/bin/pacman" >> "$CONFIG_FILE_PATH"
 	echo "# Path to sudo/doas/'root-helper' binary" >> "$CONFIG_FILE_PATH"
 	echo "SUDO_BIN=/usr/bin/sudo" >> "$CONFIG_FILE_PATH"
 	echo "# Where the packages should be cloned (defaults to ~/.cache/yeet/)" >> "$CONFIG_FILE_PATH"
-	echo "YEET_CACHE_DIR=\"/home/$USER/.cache/yeet/\"" >> "$CONFIG_FILE_PATH"
+	echo "CACHE_DIR=/home/$USER/.cache/yeet/" >> "$CONFIG_FILE_PATH"
 	echo "# The file manager to use to browse the package's snapshot before building (defaults to ranger)" >> "$CONFIG_FILE_PATH"
 	echo "FILE_MANAGER=/usr/bin/ranger" >> "$CONFIG_FILE_PATH"
 	echo "#FILE_MANAGER=/usr/bin/thunar" >> "$CONFIG_FILE_PATH"
@@ -217,13 +217,13 @@ else
 	export PRINT_LOGO=false
 	# Then set the defaults
 	# URL for AUR
-	export AUR_URL="https://aur.archlinux.org"
+	export AUR_BASE_URL="https://aur.archlinux.org"
 	# Path to sudo/doas/'root helper' binary
 	export SUDO_BIN=/usr/bin/sudo
 	# Path to pacman binary
 	export PACMAN_BIN=/usr/bin/pacman
 	# Where the packages should be cloned (defaults to ~/.cache/yeet/)
-	export YEET_CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/yeet/"
+	export CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/yeet/"
 	# The file manager to use to browse the package's snapshot before building (defaults to ranger; you can enter thunar, nemo, nautilus, vim, or any other program as well)
 	export FILE_MANAGER=/usr/bin/ranger
 	
@@ -396,8 +396,8 @@ function install_packages {
 			# Else it is in AUR, build it
 
 			# Move into the build directory
-			mkdir -p "$YEET_CACHE_DIR/build/"
-			cd "$YEET_CACHE_DIR/build/"
+			mkdir -p "$CACHE_DIR/build/"
+			cd "$CACHE_DIR/build/"
 			# Check if the package is already built
 			if [[ -d "$package" ]]; then
 				# Ask the user if they want to rebuild the package
@@ -407,7 +407,7 @@ function install_packages {
 					# If yes, delete the package dir and clone it again
 					printb "\n==> Rebuilding $package..."
 					rm -rf "$package"
-					git clone --quiet "$AUR_URL/$package.git" "$package"
+					git clone --quiet "$AUR_BASE_URL/$package.git" "$package"
 				else
 					# If not, install it with pacman -U and exit
 					cd "$package"
@@ -425,7 +425,7 @@ function install_packages {
 				fi
 			else
 				# If it is not already built, clone it
-				git clone --quiet "$AUR_URL/$package.git" "$package"
+				git clone --quiet "$AUR_BASE_URL/$package.git" "$package"
 			fi
 
 			# If the package exists, the directory exists, else it does not exist
