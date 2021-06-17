@@ -75,8 +75,10 @@ function print_package_summary {
 	pgpkeys=()
 
 	IFS="="
-	while read -r name value; do
-		key="$(echo $name | tr -d '[:space:]')"
+	while read -r key value; do
+		# Remove all spaces in the key and the leading space in the value
+		key="$(echo $key | tr -d '[:space:]')"
+		value="$(echo $value | awk '{$1=$1;print}')"
 		if [[ "$key" == "depends" ]]; then
 			# Remove version numbers
 			value="${value%>*}"
@@ -111,7 +113,7 @@ function print_package_summary {
 	printg "==> Package overview:"
 	printb " -> \e[0;33mName: $package_name\e[0m"
 	printb " -> \e[0;33mVersion: $package_ver\e[0m"
-	printb " -> \e[0;33mDescription: $package_description\e[0m"
+	printb " -> \e[0;33mDescription: $package_desc\e[0m"
 	printb " -> \e[0;33mUpstream URL: $url\e[0m"
 	printb " -> \e[0;33mLicense: $license\e[0m"
 	printb " -> \e[0;33mDependencies (to install):\e[0m"
