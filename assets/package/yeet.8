@@ -1,0 +1,174 @@
+'\ t
+.TH "YEET" "8" "2021\-06\-17" "yeet v0.4.2 "Yeet Manual"
+.nh
+.ad l
+.SH NAME
+\fIyeet\fR \- \fBAUR\fR helper and \fBpacman\fR wrapper
+
+.SH SYNOPSIS
+\fIyeet\fR <options> [targets]
+.sp
+\fIyeet\fR <search terms>
+
+.SH DESCRIPTION
+\fIyeet\fR aims to be a minimal \fBAUR\fR helper/\fBpacman\fR wrapper. It is a simple bash script and is
+intended to be lightweight. It aims to make installing a package (whether from
+\fBAUR\fR or the official repos), as simple as possible, with minimal user 
+interaction. Yeet:
+
+\- can search for a package; and then install it 
+
+\- can install a package from \fBAUR\fR or the official repos 
+
+\- allows you to edit build files before installing an \fBAUR\fR package (default
+file manager is \fBranger\fR; this can be changed)
+
+\- can build an \fBAUR\fR package using its \fBPKGBUILD\fR 
+
+\- can remove a package and any unneeded dependencies 
+
+\- can upgrade all packages 
+
+\- allows you to run common \fBpacman\fR operations 
+
+\- can be configured easily \- either through environment variables; or the
+config file, located at \fB$XDG_CONFIG_HOME/yeet/yeet.conf\fR or \fB$HOME/.config/yeet/yeet.conf\fR.
+
+
+.SH YEET OPERATIONS
+.TP
+.B \-s
+Searches for a package in \fBAUR\fR and the official repos.
+
+.TP
+.B \-B
+Builds and optionally installs a package from a custom \fBPKGBUILD\fR.
+
+.TP
+.B \-U
+Upgrades all packages.
+
+.SH EXTENDED PACMAN OPERATIONS
+.TP
+.B \-R, \-S, \-Sy, \-Syu
+These operations are extended to support packages from the official repos and
+\fBAUR\fR.
+
+.TP
+.B \-R
+Yeet will also remove any unnecessary dependencies after uninstalling the
+package.
+
+.SH NO OPERATION
+
+.TP
+.B <NO OPTION>
+Yeet will display a list of packages matching the search terms and prompts
+the user on which packages to install.
+
+.SH EXAMPLES
+.TP
+\fIyeet foo\fR
+Search and install packages from the official repos and \fBAUR\fR\, which
+match the search term \fIfoo\fR.
+
+.TP
+\fIyeet \-s foo\fR
+Searches for package \fIfoo\fR in the official repos and \fBAUR\fR.
+
+.TP
+\fIyeet \-S foo\fR
+Installs the package \fIfoo\fR from the official repos or \fBAUR\fR.
+
+.TP
+\fIyeet \-Syu\fR or \fIyeet \-U\fR
+Update package list and upgrade all currently installed packages.
+
+.TP
+\fIyeet \-R foo\fR
+Uninstalls/removes the package \fIfoo\fR.
+
+.TP
+\fIyeet \-B ~/Packages/foo\fR
+Builds and optionally installs the package \fIfoo\fR from the \fBPKGBUILD\fR in the directory \fI~/Packages/foo\fR
+
+.SH ENVIRONMENT VARIABLES
+
+.TP
+.B \fBAUR_BASE_URL\fR
+Overrides the URL used for \fBAUR\fR packages.
+
+Default: \fIhttps://aur.archlinux.org\fR
+
+.TP
+.B PACMAN_BIN
+Overrides what command will be run in place of \fBpacman\fR while installing/removing packages.
+
+Default: \fI/usr/bin/pacman\fR
+
+.TP
+.B SUDO_BIN
+Overrides what command will be run in place of \fBsudo\fR when superuser permissions are required.
+
+Default: \fI/usr/bin/sudo\fR
+
+.TP
+.B CACHE_DIR
+Overrides where \fBAUR\fR packages will be downloaded and built.
+
+Default: \fI$XDG_CONFIG_HOME/yeet/\fR or \fI$HOME/.cache/yeet/\fR
+
+.TP
+.B FILE_MANAGER
+Overrides which file manager to use to view/edit the build files for \fBAUR\fR
+packages.
+
+Default: \fI/usr/bin/ranger\fR
+
+.TP
+.B PRINT_LOGO
+Overrides whether to print the logo and version everytime \fIyeet\fR is run.
+
+Default: \fItrue\fR
+
+.SH FILES
+.TP
+.B CONFIG FILE
+The config directory is \fI$XDG_CONFIG_HOME/yeet/\fR. If
+\fB$XDG_CONFIG_HOME\fR is unset, the config directory will fall back to
+\fI$HOME/.config/yeet\fR.
+
+\fIyeet.conf\fR is used to store all of \fIyeet\fR's config options. See
+.BR yeet.conf (5)
+for more about this file.
+
+.TP
+.B CACHE/BUILD DIRECTORY
+This directory is used to store downloaded \fBAUR\fR Packages as well as any source
+files and build files from those packages.
+
+.TP
+.B PACMAN.CONF
+\fIyeet\fR uses a package call package\-query to query \fBAUR\fR and the official repos.
+package\-query inherits quite a few options from \fBpacman\fR.conf, most importantly
+ROOT_DIR, and DBPATH. \fIyeet\fR also uses the COLOR option to display \fBpacman\fR
+operation output in color while installing/removing packages.
+
+.SH SEE ALSO
+.BR makepkg (8),
+.BR makepkg.conf (5),
+.BR PKGBUILD (5),
+.BR pacman (8),
+.BR pacman.conf (5)
+
+See the arch wiki at https://wiki.archlinux.org/index.php/Arch_User_Repository
+for more info on \fBAUR\fR.
+
+.SH BUGS/FEEDBACK
+Please report bugs on Github: \fBhttps://github.com/gamemaker1/yeet\fR.
+
+Pull requests and suggestions are also welcome! Feel free to start a discussion
+here: \fBhttps://github.com/gamemaker1/yeet/discussions/new\fR
+
+.SH AUTHORS
+Vedant K (gamemaker1) <gamemaker0042 at gmail dot com>
