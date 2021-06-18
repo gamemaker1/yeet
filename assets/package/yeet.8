@@ -16,21 +16,20 @@ intended to be lightweight. It aims to make installing a package (whether from
 \fBAUR\fR or the official repos), as simple as possible, with minimal user 
 interaction. Yeet:
 
-\- can search for a package; and then install it (\fIyeet <package search terms>\fR)
+\- can search for a package; and then install it 
 
-\- can install a package from \fBAUR\fR or the official repos (\fIyeet \-S <package\-name>\fR)
+\- can install a package from \fBAUR\fR or the official repos 
 
 \- allows you to edit build files before installing an \fBAUR\fR package (default
 file manager is \fBranger\fR; this can be changed)
 
-\- can build an \fBAUR\fR package using its \fBPKGBUILD\fR (\fIyeet \-B <path to package dir>\fR)
+\- can build an \fBAUR\fR package using its \fBPKGBUILD\fR 
 
-\- can remove a package and any unneeded dependencies (\fIyeet \-R <package\-name>\fR)
+\- can remove a package and any unneeded dependencies 
 
-\- can upgrade all packages (\fIyeet \-U\fR)
+\- can upgrade all packages 
 
 \- allows you to run common \fBpacman\fR operations 
-(\fIyeet \-<D/F/Q/T> [more pacman\-specific options]\fR)
 
 \- can be configured easily \- either through environment variables; or the
 config file, located at \fB$XDG_CONFIG_HOME/yeet/yeet.conf\fR or \fB$HOME/.config/yeet/yeet.conf\fR.
@@ -74,16 +73,24 @@ Search and install packages from the official repos and \fBAUR\fR\, which
 match the search term \fIfoo\fR.
 
 .TP
-\fIyeet \-Syu\fR
-Update package list and upgrade all currently installed packages.
+\fIyeet \-s foo\fR
+Searches for package \fIfoo\fR in the official repos and \fBAUR\fR.
 
 .TP
 \fIyeet \-S foo\fR
 Installs the package \fIfoo\fR from the official repos or \fBAUR\fR.
 
 .TP
-\fIyeet \-s foo\fR
-Searches for package \fIfoo\fR in the official repos and \fBAUR\fR.
+\fIyeet \-Syu\fR or \fIyeet \-U\fR
+Update package list and upgrade all currently installed packages.
+
+.TP
+\fIyeet \-R foo\fR
+Uninstalls/removes the package \fIfoo\fR.
+
+.TP
+\fIyeet \-B ~/Packages/foo\fR
+Builds and optionally installs the package \fIfoo\fR from the \fBPKGBUILD\fR in the directory \fI~/Packages/foo\fR
 
 .SH ENVIRONMENT VARIABLES
 
