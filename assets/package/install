@@ -92,10 +92,5 @@ git clone https://aur.archlinux.org/yeet.git
 
 # Build package query first
 cd package-query
-makepkg -sfCci
-
-cd ../yeet
-makepkg -sfCci
-
-# Done
-printg "==> Yeet installed succesfully!"
+# Put it all in one line; else it skips installing the last package for some reason when piped to bash from cURL
+makepkg -sfCci --noconfirm && cd ../yeet && makepkg -sfCci --noconfirm && printg "==> Yeet installed succesfully!"
