@@ -341,34 +341,36 @@ function update_packages {
 		exit 2
 	else
 		# Install it using pacman
-		require_root $PACMAN_BIN -Syyu
+		require_root $PACMAN_BIN -Syu
 	fi
 	printg "==> Succesfully updated all packages from sync repos!"
 
 	# Then check for AUR updates
 	printb "==> Updating packages from AUR..."
 	printb "==> Searching for packages to update..."
-	aur_packages_to_update=$(package-query --rsort=p -uA || echo "")
+	aur_packages_to_update=$(package-query --rsort=p -uA)
 	if [[ -z "$aur_packages_to_update" ]]; then
 		printw "==> Nothing to do"
 	else
 		echo "$aur_packages_to_update"
 		printg "==> Updating all the above packages"
-		package_names="$(package-query -uA -f '%n' || echo "")"
+		package_names="$(package-query -uA -f '%n' | tr '\r\n' ' ')"
 		install_packages $package_names
 		printg "==> Succesfully updated all packages from AUR!"
 	fi
 }
 # Search for a package
 function search_packages {
-	printb "==> Searching for $*..."
+	IFS=' ' read -a search_terms <<< "$*"
+	printb "==> Searching for $(join_by ' ' $search_terms)..."
 	# Search the sync repos and AUR
-	package-query --rsort=p -sSA "$*"
+	package-query --rsort=p -sSA "$(join_by ' ' $search_terms)"
 }
 # Install package(s)
 function install_packages {
 	# Loop through the packages and install each one
-	for package in "$@"; do
+	IFS=' ' read -a packages <<< "$*"
+	for package in ${packages[@]}; do
 		printb "==> Installing $package..."
 
 		# Check if the packages exist
@@ -380,7 +382,7 @@ function install_packages {
 				# If it is not in AUR, print out a not found error
 				printr "ERR Package $package not found!"
 				# Skip this package
-				continue
+				return 2
 			else
 				# If it is there in AUR, build from AUR
 				use_pacman=0
@@ -397,7 +399,7 @@ function install_packages {
 			# Check that the pacman binary exists
 			if ! [[ -f "$(command -v $PACMAN_BIN)" ]] ; then
 				printr "ERR Command $PACMAN_BIN not found, cannot use pacman. Edit the PACMAN_BIN variable in $CONFIG_FILE_PATH and change it to the path to pacman"
-				exit 2
+				return 2
 			else
 				# Install it using pacman
 				require_root $PACMAN_BIN -S "$package"
@@ -442,7 +444,7 @@ function install_packages {
 			# Ideally this should not happen
 			if ! [[ -d "$package" ]]; then
 				printr "ERR Package $package not found in AUR!"
-				exit 1
+				return 1
 			fi
 
 			cd "$package"
