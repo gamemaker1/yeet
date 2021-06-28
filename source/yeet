@@ -412,7 +412,7 @@ function install_packages {
 			mkdir -p "$CACHE_DIR/build/"
 			cd "$CACHE_DIR/build/"
 			# Check if the package is already built
-			if [[ -d "$package" ]]; then
+			if [[ -d "$package" ]] && [[ -n $(echo ./$package/*.pkg.tar.zst) ]]; then
 				# Ask the user if they want to rebuild the package
 				read -p $'\e[1;33m ==> Package is already built, rebuild?\e[0m [\e[1;32my\e[0m/\e[1;31mN\e[0m] ' -n 1 -r
 				
@@ -438,6 +438,7 @@ function install_packages {
 				fi
 			else
 				# If it is not already built, clone it
+				rm -rf "$package"
 				git clone --quiet "$AUR_BASE_URL/$package.git" "$package"
 			fi
 
@@ -590,5 +591,6 @@ case "$operation" in
 	"pacman") require_root $PACMAN_BIN $*;;
 	"searchinstall") searchinstall_packages $*;;
 esac
+
 # Print a newline at the end
 printb ""
