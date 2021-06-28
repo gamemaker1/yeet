@@ -46,9 +46,13 @@ Clone the AUR package and build yeet:
 ```
 mkdir -p ~/.cache/yeet/build/
 cd ~/.cache/yeet/build/
+git clone https://aur.archlinux.org/package-query.git
 git clone https://aur.archlinux.org/yeet.git
+cd package-query
+makepkg -sfcCi
 cd yeet
 makepkg -sfcCi
+cd ~
 ```
 
 ## Usage

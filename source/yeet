@@ -85,6 +85,8 @@ function print_package_summary {
 	license=""
 	# Dependencies
 	dependencies=()
+	# Make/build-time dependencies
+	makedependencies=()
 	# Valid PGP signing keys
 	pgpkeys=()
 
@@ -100,6 +102,13 @@ function print_package_summary {
 			value="${value%=*}"
 			value="$(echo $value | tr -d '[:space:]')"
 			dependencies+=("$value")
+		fi
+		if [[ "$key" == "makedepends" ]] || [[ "$key" == "checkdepends" ]]; then
+			# Remove version numbers
+			value="${value%>*}"
+			value="${value%=*}"
+			value="$(echo $value | tr -d '[:space:]')"
+			makedependencies+=("$value")
 		fi
 		if [[ "$key" == "pkgname" ]]; then
 			value="$(echo $value | tr -d '[:space:]')"
@@ -133,14 +142,19 @@ function print_package_summary {
 	printb " -> \e[0;33mLicense: $license\e[0m"
 	printb " -> \e[0;33mDependencies (to install):\e[0m"
 	for dep in "${dependencies[@]}"; do
-		printb "  -> $(package-query -iSA "$dep")"
+		printb "  -> $(package-query -iSA "$dep" || echo "$dep [?]")"
+	done
+	printb " -> \e[0;33mBuild dependencies:\e[0m"
+	for dep in "${makedependencies[@]}"; do
+		printb "  -> $(package-query -iSA "$dep" || echo "$dep [?]")"
 	done
 
 	# Import PGP keys
 	if [[ "${#pgpkeys[@]}" != "0" ]]; then
 		printb "==> Importing PGP keys $(join_by ', ' $pgpkeys)"
 		for key in "${pgpkeys[@]}"; do
-			gpg --recv-keys "$key"
+			# Manually set the keyserver if it does not work automatically the first time
+			gpg --recv-keys "$key" || gpg --keyserver keyserver.ubuntu.com --recv-keys "$key"
 		done
 		printg "==> Imported PGP keys successfully!"
 	fi
@@ -154,7 +168,7 @@ function print_logo {
 	printw "░░▀░░▀▀▀░▀▀▀░░▀░░"
 	printw "░░░░░░░░░░░░░░░░░"
 	printw ""
-	printw "v0.4.2"
+	printw "v0.5.0"
 	printw ""
 }
 
@@ -257,6 +271,8 @@ search_regex="\-s"
 remove_regex="\-Rs*"
 # yeet -B <path to package dir>  - Build an AUR package
 build_regex="\-B"
+# yeet -C                        - Clear build directory
+clean_regex="\-C"
 # yeet -D/F/Q/T [options]        - Run pacman -D/F/Q/T
 pacman_regex="\-[DFQT].*"
 # yeet <package search terms>    - Search for a package and install it
@@ -291,6 +307,11 @@ if [[ "$1" =~ $option_regex ]] || [[ -z "$1" ]]; then
 		operation="build"
 		# Shift the params so the second one is the first, the third is the second and so on
 		shift
+    elif [[ "$1" =~ $clean_regex  ]]; then
+        # Clear cache dir
+		operation="clean"
+		# Shift the params so the second one is the first, the third is the second and so on
+		shift
 	elif [[ "$1" =~ $pacman_regex ]]; then
 		# If the first option is -D/F/Q/T and the like (e.g., -Dkk, -Fy, -Ql, -Tv), then let pacman handle it
 		operation="pacman"
@@ -315,7 +336,8 @@ function help {
 	printw "\e[0;34mInstall the specified package(s)     \e[1;33m yeet -S <package name>"
 	printw "\e[0;34mRemove the specified package(s)      \e[1;33m yeet -R <package name>"
 	printw "\e[0;34mBuild an AUR package                 \e[1;33m yeet -B <path to package dir>"
-	printw "\e[0;34mRun pacman -D                        \e[1;33m yeet -D [options]"
+	printw "\e[0;34mClear cache directory                \e[1;33m yeet -C"
+    printw "\e[0;34mRun pacman -D                        \e[1;33m yeet -D [options]"
 	printw "\e[0;34mRun pacman -F                        \e[1;33m yeet -F [options]"
 	printw "\e[0;34mRun pacman -Q                        \e[1;33m yeet -Q [options]"
 	printw "\e[0;34mRun pacman -T                        \e[1;33m yeet -T [options]"
@@ -333,34 +355,36 @@ function update_packages {
 		exit 2
 	else
 		# Install it using pacman
-		require_root $PACMAN_BIN -Syyu
+		require_root $PACMAN_BIN -Syu
 	fi
 	printg "==> Succesfully updated all packages from sync repos!"
 
 	# Then check for AUR updates
 	printb "==> Updating packages from AUR..."
 	printb "==> Searching for packages to update..."
-	aur_packages_to_update=$(package-query --rsort=p -uA || echo "")
+	aur_packages_to_update=$(package-query --rsort=p -uA)
 	if [[ -z "$aur_packages_to_update" ]]; then
 		printw "==> Nothing to do"
 	else
 		echo "$aur_packages_to_update"
 		printg "==> Updating all the above packages"
-		package_names="$(package-query -uA -f '%n' || echo "")"
+		package_names="$(package-query -uA -f '%n' | tr '\r\n' ' ')"
 		install_packages $package_names
 		printg "==> Succesfully updated all packages from AUR!"
 	fi
 }
 # Search for a package
 function search_packages {
-	printb "==> Searching for $*..."
+	IFS=' ' read -a search_terms <<< "$*"
+	printb "==> Searching for $(join_by ' ' $search_terms)..."
 	# Search the sync repos and AUR
-	package-query --rsort=p -sSA "$*"
+	package-query --rsort=p -sSA "$(join_by ' ' $search_terms)"
 }
 # Install package(s)
 function install_packages {
 	# Loop through the packages and install each one
-	for package in "$@"; do
+	IFS=' ' read -a packages <<< "$*"
+	for package in ${packages[@]}; do
 		printb "==> Installing $package..."
 
 		# Check if the packages exist
@@ -372,7 +396,7 @@ function install_packages {
 				# If it is not in AUR, print out a not found error
 				printr "ERR Package $package not found!"
 				# Skip this package
-				continue
+				return 2
 			else
 				# If it is there in AUR, build from AUR
 				use_pacman=0
@@ -389,7 +413,7 @@ function install_packages {
 			# Check that the pacman binary exists
 			if ! [[ -f "$(command -v $PACMAN_BIN)" ]] ; then
 				printr "ERR Command $PACMAN_BIN not found, cannot use pacman. Edit the PACMAN_BIN variable in $CONFIG_FILE_PATH and change it to the path to pacman"
-				exit 2
+				return 2
 			else
 				# Install it using pacman
 				require_root $PACMAN_BIN -S "$package"
@@ -401,7 +425,7 @@ function install_packages {
 			mkdir -p "$CACHE_DIR/build/"
 			cd "$CACHE_DIR/build/"
 			# Check if the package is already built
-			if [[ -d "$package" ]]; then
+			if [[ -d "$package" ]] && [[ -n $(echo ./$package/*.pkg.tar.zst) ]]; then
 				# Ask the user if they want to rebuild the package
 				read -p $'\e[1;33m ==> Package is already built, rebuild?\e[0m [\e[1;32my\e[0m/\e[1;31mN\e[0m] ' -n 1 -r
 				
@@ -427,6 +451,7 @@ function install_packages {
 				fi
 			else
 				# If it is not already built, clone it
+				rm -rf "$package"
 				git clone --quiet "$AUR_BASE_URL/$package.git" "$package"
 			fi
 
@@ -434,7 +459,7 @@ function install_packages {
 			# Ideally this should not happen
 			if ! [[ -d "$package" ]]; then
 				printr "ERR Package $package not found in AUR!"
-				exit 1
+				return 1
 			fi
 
 			cd "$package"
@@ -537,6 +562,19 @@ function build_packages {
 		printw "==> Package built; but not installed. Run \`yeet -B $1\` again if you want to install the package."
 	fi
 }
+# Clear the build dir
+function clean {
+    printb "==> Clearing cache directory ($CACHE_DIR)"
+    # Ask the user if they want to clear the build directory
+	read -p $'\e[1;33m ==> Are you sure you want to clear the cache directory?\e[0m [\e[1;32my\e[0m/\e[1;31mN\e[0m] ' -n 1 -r
+	if [[ $REPLY =~ ^[Yy]$ ]]; then
+		printb "\n==> Removing cache directory..."
+	    rm -rf "$CACHE_DIR"
+        printg "==> Deleted cache directory!"	
+	else
+		printr "==> Aborted by user!"
+	fi
+}
 # Search for a package and install it
 function searchinstall_packages {
 	# Search for packages
@@ -562,8 +600,10 @@ case "$operation" in
 	"updateinstall") updateinstall_packages $*;;
 	"remove") remove_packages $*;;
 	"build") build_packages $*;;
+	"clean") clean $*;;
 	"pacman") require_root $PACMAN_BIN $*;;
 	"searchinstall") searchinstall_packages $*;;
 esac
+
 # Print a newline at the end
 printb ""
