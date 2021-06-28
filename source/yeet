@@ -85,6 +85,8 @@ function print_package_summary {
 	license=""
 	# Dependencies
 	dependencies=()
+	# Make/build-time dependencies
+	makedependencies=()
 	# Valid PGP signing keys
 	pgpkeys=()
 
@@ -100,6 +102,13 @@ function print_package_summary {
 			value="${value%=*}"
 			value="$(echo $value | tr -d '[:space:]')"
 			dependencies+=("$value")
+		fi
+		if [[ "$key" == "makedepends" ]] || [[ "$key" == "checkdepends" ]]; then
+			# Remove version numbers
+			value="${value%>*}"
+			value="${value%=*}"
+			value="$(echo $value | tr -d '[:space:]')"
+			makedependencies+=("$value")
 		fi
 		if [[ "$key" == "pkgname" ]]; then
 			value="$(echo $value | tr -d '[:space:]')"
@@ -133,6 +142,10 @@ function print_package_summary {
 	printb " -> \e[0;33mLicense: $license\e[0m"
 	printb " -> \e[0;33mDependencies (to install):\e[0m"
 	for dep in "${dependencies[@]}"; do
+		printb "  -> $(package-query -iSA "$dep" || echo "$dep [?]")"
+	done
+	printb " -> \e[0;33mBuild dependencies:\e[0m"
+	for dep in "${makedependencies[@]}"; do
 		printb "  -> $(package-query -iSA "$dep" || echo "$dep [?]")"
 	done
 
