@@ -140,7 +140,8 @@ function print_package_summary {
 	if [[ "${#pgpkeys[@]}" != "0" ]]; then
 		printb "==> Importing PGP keys $(join_by ', ' $pgpkeys)"
 		for key in "${pgpkeys[@]}"; do
-			gpg --recv-keys "$key"
+			# Manually set the keyserver if it does not work automatically the first time
+			gpg --recv-keys "$key" || gpg --keyserver keyserver.ubuntu.com --recv-keys "$key"
 		done
 		printg "==> Imported PGP keys successfully!"
 	fi
