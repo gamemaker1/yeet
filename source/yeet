@@ -133,7 +133,7 @@ function print_package_summary {
 	printb " -> \e[0;33mLicense: $license\e[0m"
 	printb " -> \e[0;33mDependencies (to install):\e[0m"
 	for dep in "${dependencies[@]}"; do
-		printb "  -> $(package-query -iSA "$dep")"
+		printb "  -> $(package-query -iSA "$dep" || echo "$dep [?]")"
 	done
 
 	# Import PGP keys
