@@ -21,6 +21,7 @@ unalias -a
 set -e
 # Enable globs
 shopt -s nullglob
+shopt -s extglob
 # For debbuging
 #set -xv
 # package-query colors
@@ -180,20 +181,15 @@ mkdir -p "${XDG_CONFIG_HOME:-$HOME/.config}/yeet/"
 # Now check if the user already has a config file in that dir
 if [[ -f "$CONFIG_FILE_PATH" ]]; then
 	# If the file exists, set all the variables from it
-	# Parse it
-	IFS="="
-	while read -r key value; do
-		# Remove all spaces in the key and the leading space in the value
-		key="$(echo $key | tr -d '[:space:]')"
-		value="$(echo $value | awk '{$1=$1;print}')"
-		case "$key" in
-			"AUR_BASE_URL") [[ -z "$AUR_BASE_URL" ]] && export AUR_BASE_URL="$value";;
-			"PACMAN_BIN") [[ -z "$PACMAN_BIN" ]] && export PACMAN_BIN="$value";;
-			"SUDO_BIN") [[ -z "$SUDO_BIN" ]] && export SUDO_BIN="$value";;
-			"CACHE_DIR") [[ -z "$CACHE_DIR" ]] && export CACHE_DIR="$value";;
-			"FILE_MANAGER") [[ -z "$FILE_MANAGER" ]] && export FILE_MANAGER="$value";;
-			"PRINT_LOGO") [[ -z "$PRINT_LOGO" ]] && export PRINT_LOGO="$value";;
-		esac
+	while IFS='= ' read -r lhs rhs
+	do
+		if [[ ! $lhs =~ ^\ *# && -n $lhs ]]; then
+			rhs="${rhs%%\#*}"    # Delete in line right comments
+			rhs="${rhs%%*( )}"   # Delete trailing spaces
+			rhs="${rhs%\"*}"     # Delete opening string quotes
+			rhs="${rhs#\"*}"     # Delete closing string quotes
+			declare $lhs="$rhs"
+		fi
 	done < "$CONFIG_FILE_PATH"
 else
 	# If there is no config file, create one for the user
