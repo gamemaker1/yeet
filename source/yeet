@@ -423,7 +423,11 @@ function install_packages {
 			# Check if the package is already built
 			if [[ -d "$package" ]] && [[ -n $(echo ./$package/*.pkg.tar.zst) ]]; then
 				# Ask the user if they want to rebuild the package
-				read -p $'\e[1;33m ==> Package is already built, rebuild?\e[0m [\e[1;32my\e[0m/\e[1;31mN\e[0m] ' -n 1 -r
+				if [[ -z "$NO_CONFIRM" ]]; then
+					read -p $'\e[1;33m ==> Package is already built, rebuild?\e[0m [\e[1;32my\e[0m/\e[1;31mN\e[0m] ' -n 1 -r
+				else
+					REPLY=""
+				fi
 				
 				if [[ $REPLY =~ ^[Yy]$ ]]; then
 					# If yes, delete the package dir and clone it again
@@ -459,8 +463,12 @@ function install_packages {
 			fi
 
 			cd "$package"
-			
-			read -p $'\e[1;33m ==> Edit build files?\e[0m [\e[1;32my\e[0m/\e[1;31mN\e[0m] ' -n 1 -r
+
+			if [[ -z "$NO_CONFIRM" ]]; then
+				read -p $'\e[1;33m ==> Edit build files?\e[0m [\e[1;32my\e[0m/\e[1;31mN\e[0m] ' -n 1 -r
+			else
+				REPLY=""
+			fi
 
 			if [[ $REPLY =~ ^[Yy]$ ]]; then
 				printb "\n==> Editing build files for $package..."
@@ -485,7 +493,11 @@ function install_packages {
 			printg "==> Building $package..."
 			
 			# Build, install and clean up
-			makepkg -sfCci
+			if [[ -z "$NO_CONFIRM" ]]; then
+				makepkg -sfCci
+			else
+				makepkg -sfCci --noconfirm
+			fi
 		fi
 
 		printg "==> Installed $package successfully"
@@ -536,7 +548,12 @@ function build_packages {
 	printg "==> Package built succesfully!"
 
 	# Ask the user if they want to install the package
-	read -p $'\e[1;33m ==> Install package?\e[0m [\e[1;32my\e[0m/\e[1;31mN\e[0m] ' -n 1 -r
+	if [[ -z "$NO_CONFIRM" ]]; then
+		read -p $'\e[1;33m ==> Install package?\e[0m [\e[1;32my\e[0m/\e[1;31mN\e[0m] ' -n 1 -r
+	else
+		REPLY=""
+	fi
+
 	if [[ $REPLY =~ ^[Yy]$ ]] || [[ -z "$REPLY" ]]; then
 		printb "==> Installing..."
 		
@@ -560,9 +577,14 @@ function build_packages {
 }
 # Clear the build dir
 function clean {
-    printb "==> Clearing cache directory ($CACHE_DIR)"
-    # Ask the user if they want to clear the build directory
-	read -p $'\e[1;33m ==> Are you sure you want to clear the cache directory?\e[0m [\e[1;32my\e[0m/\e[1;31mN\e[0m] ' -n 1 -r
+	printb "==> Clearing cache directory ($CACHE_DIR)"
+	# Ask the user if they want to clear the build directory
+	if [[ -z "$NO_CONFIRM" ]]; then
+		read -p $'\e[1;33m ==> Are you sure you want to clear the cache directory?\e[0m [\e[1;32my\e[0m/\e[1;31mN\e[0m] ' -n 1 -r
+	else
+		REPLY="Y"
+	fi
+
 	if [[ $REPLY =~ ^[Yy]$ ]]; then
 		printb "\n==> Removing cache directory..."
 	    rm -rf "$CACHE_DIR"
