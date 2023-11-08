@@ -1,8 +1,10 @@
-<div align="center"><img src="assets/media/preview.png"></div>
+<h1 align="center"> <code>yeet</code> </h1>
 
-<h2><div align="center"> yeet </div></h2>
+<div align="center"><img height="250" src="assets/media/preview.png"></div>
 
 <div align="center"> a beautiful, easy-to-use aur helper and pacman wrapper. </div>
+
+---
 
 this project is inspired by several amazing projects:
 
