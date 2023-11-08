@@ -1,18 +1,15 @@
-<h1 align="center"> <code>yeet</code> </h1>
+<div align="center">
+  <img height="250" src="assets/media/preview.png">
+</div>
 
-<div align="center"><img height="250" src="assets/media/preview.png"></div>
+<h1 align="center">
+  <code>yeet</code>
+</h1>
 
-<div align="center"> a beautiful, easy-to-use aur helper and pacman wrapper. </div>
-
----
-
-this project is inspired by several amazing projects:
-
-- [`pacaur`](https://aur.archlinux.org/pacaur)
-- [`pikaur`](https://aur.archlinux.org/pikaur)
-- [`yay`](https://aur.archlinux.org/yay)
-- [`paru`](https://aur.archlinux.org/paru)
-
+> a beautiful, easy-to-use aur helper and pacman wrapper, inspired by
+> [several](https://aur.archlinux.org/pikaur) [amazing](https://aur.archlinux.org/pacaur)
+> [projects](https://aur.archlinux.org/paru).
+> 
 > uses [`package-query`](https://aur.archlinux.org/package-query) to query
 > packages from the sync repos and AUR.
 
