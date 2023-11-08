@@ -180,7 +180,8 @@ CONFIG_FILE_PATH="${XDG_CONFIG_HOME:-$HOME/.config}/yeet/yeet.conf"
 mkdir -p "${XDG_CONFIG_HOME:-$HOME/.config}/yeet/"
 # Now check if the user already has a config file in that dir
 if [[ -f "$CONFIG_FILE_PATH" ]]; then
-	# If the file exists, set all the variables from it
+	# If the file exists, set all the variables from it. The code to parse the
+	# configuration is taken from this answer: https://stackoverflow.com/a/20815951.
 	while IFS='= ' read -r lhs rhs
 	do
 		if [[ ! $lhs =~ ^\ *# && -n $lhs ]]; then
