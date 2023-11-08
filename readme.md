@@ -7,11 +7,9 @@
 </h1>
 
 > a beautiful, easy-to-use aur helper and pacman wrapper, inspired by
-> [several](https://aur.archlinux.org/pikaur) [amazing](https://aur.archlinux.org/pacaur)
+> [several](https://aur.archlinux.org/pikaur)
+> [amazing](https://aur.archlinux.org/pacaur)
 > [projects](https://aur.archlinux.org/paru).
-> 
-> uses [`package-query`](https://aur.archlinux.org/package-query) to query
-> packages from the sync repos and AUR.
 
 ## installation
 
