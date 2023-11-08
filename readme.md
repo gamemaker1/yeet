@@ -1,14 +1,10 @@
-<div align="center"><img src="assets/media/install-process.png"></div>
+<div align="center"><img src="assets/media/preview.png"></div>
 
-# <div align="center"> yeet </div>
+<h2><div align="center"> yeet </div></h2>
 
 <div align="center"> a beautiful, easy-to-use aur helper and pacman wrapper. </div>
 
-> `yeet` (stylised in lowercase) is yet another minimal
-> [`pacman`](https://wiki.archlinux.org/title/pacman) wrapper +
-> [`aur`](https://wiki.archlinux.org/title/aur) helper. Yeet!
-
-inspired by several AMAZING projects:
+this project is inspired by several amazing projects:
 
 - [`pacaur`](https://aur.archlinux.org/pacaur)
 - [`pikaur`](https://aur.archlinux.org/pikaur)
