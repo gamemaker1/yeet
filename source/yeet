@@ -412,7 +412,11 @@ function install_packages {
 				return 2
 			else
 				# Install it using pacman
-				require_root $PACMAN_BIN -S "$package"
+				if [[ -z "$NO_CONFIRM" ]]; then
+					require_root $PACMAN_BIN -S "$package"
+				else
+					require_root $PACMAN_BIN -S --noconfirm "$package"
+				fi
 			fi
 		else
 			# Else it is in AUR, build it
@@ -440,7 +444,7 @@ function install_packages {
 					# Check if there is a .pkg.tar.zst file
 					if [[ -n $(echo *.pkg.tar.zst) ]]; then
 						# If there is, install it
-						require_root $PACMAN_BIN -U *.pkg.tar.zst
+						require_root $PACMAN_BIN -U --noconfirm *.pkg.tar.zst
 						printg "==> Installed $package successfully"
 						return
 					else
