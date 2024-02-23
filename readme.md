@@ -50,7 +50,7 @@ git clone https://aur.archlinux.org/package-query.git
 git clone https://aur.archlinux.org/yeet.git
 cd package-query
 makepkg -sfcCi
-cd yeet
+cd ../yeet
 makepkg -sfcCi
 cd ~
 ```
